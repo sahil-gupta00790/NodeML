@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workflow Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<style>
+    /* General Styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        background: linear-gradient(135deg, #f8f9fa, #e7e9fc);
+        color: #333;
+    }
+
+    /* Toolbar */
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 20px;
+        background: #007bff;
+        color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .toolbar button {
+        background: linear-gradient(135deg, #2dce89, #6c63ff);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .toolbar button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Layout */
+    .container {
+        display: flex;
+        flex: 1;
+    }
+
+    /* Node Palette */
+    .node-palette {
+        width: 20%;
+        background: white;
+        padding: 20px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .node-palette h3 {
+        font-size: 18px;
+        color: #6c63ff;
+        margin-bottom: 10px;
+    }
+
+    .node-palette .node {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 10px;
+        cursor: grab;
+        transition: all 0.2s ease;
+    }
+
+    .node-palette .node:hover {
+        background: #eef2ff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Canvas */
+    .canvas {
+        flex: 1;
+        background: #f5f6fa;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Properties Panel */
+    .properties-panel {
+        width: 20%;
+        background: white;
+        padding: 20px;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .properties-panel h3 {
+        font-size: 18px;
+        color: #6c63ff;
+        margin-bottom: 10px;
+    }
+
+    /* Bottom Panel */
+    .bottom-panel {
+        height: 20%;
+        background: #ffffff;
+        padding: 10px 20px;
+        border-top: 1px solid #ddd;
+        box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
+    }
+</style>
+</head>
+<body>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <h2>Workflow Editor</h2>
+        <div>
+            <button id="save-workflow">Save Workflow</button>
+            <button id="reset-canvas">Reset Canvas</button>
+            <button id="train-model">Train Model</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Node Palette -->
+        <div class="node-palette">
+            <h3>Node Palette</h3>
+            <div class="node" draggable="true">Data Preprocessing</div>
+            <div class="node" draggable="true">Feature Extraction</div>
+            <div class="node" draggable="true">Model Layer</div>
+            <div class="node" draggable="true">Optimizer</div>
+            <div class="node" draggable="true">Loss Function</div>
+        </div>
+
+        <!-- Canvas -->
+        <div class="canvas"></div>
+
+        <!-- Properties Panel -->
+        <div class="properties-panel">
+            <h3>Node Properties</h3>
+            <p>Select a node to view its properties</p>
+        </div>
+    </div>
+
+    <!-- Bottom Panel -->
+    <div class="bottom-panel">
+        <h3>Training Logs</h3>
+        <p>No logs yet...</p>
+    </div>
+
+    <script>
+        // Select DOM elements
+        const nodes = document.querySelectorAll(".node");
+        const canvas = document.querySelector(".canvas");
+        const propertiesPanel = document.querySelector(".properties-panel");
+        const bottomPanel = document.querySelector(".bottom-panel");
+
+        // Drag-and-drop functionality
+        nodes.forEach(node => {
+            node.addEventListener("dragstart", (event) => {
+                event.dataTransfer.setData("text/plain", node.textContent);
+            });
+        });
+
+        canvas.addEventListener("dragover", (event) => {
+            event.preventDefault(); // Allow dropping
+        });
+
+        canvas.addEventListener("drop", (event) => {
+            event.preventDefault();
+            const nodeType = event.dataTransfer.getData("text/plain");
+            const newNode = document.createElement("div");
+            newNode.textContent = nodeType;
+            newNode.className = "node";
+            newNode.style.position = "absolute";
+            newNode.style.left = `${event.clientX}px`;
+            newNode.style.top = `${event.clientY}px`;
+            newNode.style.background = "#eef2ff";
+            newNode.style.cursor = "pointer";
+
+            // Click event to show properties
+            newNode.addEventListener("click", () => {
+                propertiesPanel.innerHTML = `
+                    <h3>${nodeType} Properties</h3>
+                    <p>Edit the properties of this node here...</p>
+                `;
+            });
+
+            canvas.appendChild(newNode);
+        });
+
+        // Button handlers
+        document.getElementById("reset-canvas").addEventListener("click", () => {
+            canvas.innerHTML = '';
+            propertiesPanel.innerHTML = `
+                <h3>Node Properties</h3>
+                <p>Select a node to view its properties</p>
+            `;
+        });
+
+        document.getElementById("save-workflow").addEventListener("click", () => {
+            const nodes = [...canvas.querySelectorAll(".node")].map(node => ({
+                type: node.textContent,
+                position: { left: node.style.left, top: node.style.top }
+            }));
+            console.log("Saved Workflow:", JSON.stringify(nodes));
+            bottomPanel.innerHTML = `<h3>Training Logs</h3><p>Workflow saved successfully!</p>`;
+        });
+
+        document.getElementById("train-model").addEventListener("click", () => {
+            bottomPanel.innerHTML = `<h3>Training Logs</h3><p>Training started...</p>`;
+        });
+    </script>
+</body>
+</html>
